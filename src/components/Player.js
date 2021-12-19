@@ -36,6 +36,8 @@ export const Player = (props) => {
       0,
       (moveBackward ? 1 : 0) - (moveForward ? 1 : 0),
     );
+
+    
     const sideVector = new Vector3(
       (moveLeft ? 1 : 0) - (moveRight ? 1 : 0),
       0,
