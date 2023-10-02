@@ -23,7 +23,8 @@ export default function App() {
         <Ground />
         <Player />
       <UserInterFaceTest />
-        <Cubes />
+        <Cubes />  
+        
       </Physics>
       <PointerLockControls />
     </Canvas>
