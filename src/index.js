@@ -11,7 +11,7 @@ function Overlay() {
       <div className="dot" />
       <div className={`fullscreen bg ${ready ? "ready" : "notready"} ${ready && "clicked"}`}>
         <div className="stack">
-          <button onClick={() => set(true)}>Click (needs fullscreen)</button>
+          <button onClick={() => set(true)}>Click (needs fullscreen !)</button>
         </div>
     
       </div>
