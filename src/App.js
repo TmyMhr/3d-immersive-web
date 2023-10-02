@@ -18,13 +18,12 @@ export default function App() {
 
       <Stars />
       <ambientLight intensity={0.5} />
-      <pointLight castShadow intensity={0.8} position={[100, 100, 100]} />
+      <pointLight castShadow intensity={0.5} position={[100, 100, 100]} />
       <Physics gravity={[0, -30, 0]}>
         <Ground />
         <Player />
       <UserInterFaceTest />
         <Cubes />  
-        
       </Physics>
       <PointerLockControls />
     </Canvas>
