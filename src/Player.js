@@ -29,7 +29,7 @@ const usePlayerControls = () => {
 
 export const Player = (props) => {
   
-  const [ref, api] = useSphere(() => ({ mass: 1, type: "Dynamic", position: [0, 10, 0], ...props }))
+  const [ref, api] = useSphere(() => ({ mass: 1, type: "Dynamic", position: [0, 2000, 0], ...props }))
   const { forward, backward, left, right, jump } = usePlayerControls()
   const { camera } = useThree()
   const velocity = useRef([0, 0, 0])
