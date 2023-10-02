@@ -16,9 +16,8 @@ export default function App() {
 
       <Stats /> 
       <Sky distance={450000} sunPosition={[0, 1, 0]} inclination={0} azimuth={0.25}  /> 
-      <Cloud segments={40} bounds={[10, 2, 2]} volume={10} color="orange" position={[100, 60, 230]} />
-      <Cloud seed={1} scale={2} volume={5} color="hotpink" fade={100} position={[80, 55, 0]} />
-
+      <Cloud segments={40} bounds={[10, 2, 2]} volume={10} color="orange" position={[20, 100, 0]} />
+<Cloud seed={1} scale={2} volume={5} color="hotpink" fade={100} position={[0, 100, 30]} />
       <Stars />
       <ambientLight intensity={0.5} />
       <pointLight castShadow intensity={0.5} position={[100, 100, 100]} />

@@ -1675,7 +1675,7 @@
     "cannon-es" "^0.18.0"
     "cannon-es-debugger" "^1.0.0"
 
-"@react-three/drei@8.10.5":
+"@react-three/drei@^8.10.5":
   "integrity" "sha512-Kcv0ZpVeVUyDprY9hU7+S+OMPfFTSmDZ+VBi+R8kOQAfpv/Q5hV/xwmJHSlXUQPnatVGSmFKjqyuUIbWqWxNMw=="
   "resolved" "https://registry.npmjs.org/@react-three/drei/-/drei-8.10.5.tgz"
   "version" "8.10.5"
