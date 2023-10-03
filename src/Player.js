@@ -33,7 +33,8 @@ export const Player = () => {
     type: "Dynamic",
     linearDamping: 0.1, // Add linear damping to control linear velocity damping
     angularDamping: 0.1,
-    position: [0, 10, 5], // Set the initial position to [0, 10, 0] or any desired spawn point on the ground
+    position: [0, 10, 5],
+    gravity: [0, -20, 0], // Set the initial position to [0, 10, 0] or any desired spawn point on the ground
   }));
   const { forward, backward, left, right, jump } = usePlayerControls();
   const { camera } = useThree();
@@ -47,7 +48,7 @@ export const Player = () => {
     speed.fromArray(velocity.current);
 
     api.velocity.set(direction.x, velocity.current[1], direction.z);
-    if (jump && Math.abs(velocity.current[1].toFixed(2)) < 0.05) api.velocity.set(velocity.current[0], 10, velocity.current[2]);
+    if (jump && Math.abs(velocity.current[1].toFixed(2)) < 0.05) api.velocity.set(velocity.current[0], 7, velocity.current[2]);
   });
   return (
     <>
