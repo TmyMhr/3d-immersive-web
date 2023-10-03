@@ -18,5 +18,5 @@ export default function Model(props) {
     </group>
   );
 }
-
+  
 useGLTF.preload('https://vazxmixjsiawhamofees.supabase.co/storage/v1/object/public/models/rocks-forrest/model.gltf');
