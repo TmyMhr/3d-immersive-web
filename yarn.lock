@@ -1667,7 +1667,7 @@
   "resolved" "https://registry.npmjs.org/@react-spring/types/-/types-9.7.3.tgz"
   "version" "9.7.3"
 
-"@react-three/cannon@4.7.0":
+"@react-three/cannon@^4.7.0":
   "integrity" "sha512-glgRxjyuXDdn1c7J9aRwvjUQXtrHM7i8Z0sD/iQYUsDfbcI23rCGoZ7K3KlXGTzNz3vafdsr3/4WSoCBoBTM3Q=="
   "resolved" "https://registry.npmjs.org/@react-three/cannon/-/cannon-4.7.0.tgz"
   "version" "4.7.0"
@@ -1675,29 +1675,30 @@
     "cannon-es" "^0.18.0"
     "cannon-es-debugger" "^1.0.0"
 
-"@react-three/drei@^8.10.5":
-  "integrity" "sha512-Kcv0ZpVeVUyDprY9hU7+S+OMPfFTSmDZ+VBi+R8kOQAfpv/Q5hV/xwmJHSlXUQPnatVGSmFKjqyuUIbWqWxNMw=="
-  "resolved" "https://registry.npmjs.org/@react-three/drei/-/drei-8.10.5.tgz"
-  "version" "8.10.5"
+"@react-three/drei@^8.20.2":
+  "integrity" "sha512-V2P/YHYg2+N58eWtIqmOJf0t5nWGTcmpT+ci4tB5gt3CsWU2vuoeQFhvBmqEF+cXwZD5ZYKPfQDf/06NzTx/lw=="
+  "resolved" "https://registry.npmjs.org/@react-three/drei/-/drei-8.20.2.tgz"
+  "version" "8.20.2"
   dependencies:
     "@babel/runtime" "^7.11.2"
     "@react-spring/three" "^9.3.1"
     "@use-gesture/react" "^10.2.0"
-    "detect-gpu" "^3.1.28"
+    "detect-gpu" "^4.0.14"
     "glsl-noise" "^0.0.0"
     "lodash.omit" "^4.5.0"
     "lodash.pick" "^4.4.0"
+    "meshline" "^2.0.4"
     "react-composer" "^5.0.2"
     "react-merge-refs" "^1.1.0"
     "stats.js" "^0.17.0"
     "suspend-react" "^0.0.8"
-    "three-mesh-bvh" "^0.5.4"
-    "three-stdlib" "^2.8.7"
-    "troika-three-text" "^0.45.0"
+    "three-mesh-bvh" "^0.5.7"
+    "three-stdlib" "^2.8.9"
+    "troika-three-text" "^0.46.3"
     "utility-types" "^3.10.0"
     "zustand" "^3.5.13"
 
-"@react-three/fiber@>=6.0", "@react-three/fiber@7.0.26":
+"@react-three/fiber@^7.0.26", "@react-three/fiber@>=6.0":
   "integrity" "sha512-46NBais4fQIGcMGLBbOf84lp8y/cg73jOEVmAQQJqWX6iOVeNg29jYd15LBuCW2qPD1qDRU0rOfLbMDgwr/vxQ=="
   "resolved" "https://registry.npmjs.org/@react-three/fiber/-/fiber-7.0.26.tgz"
   "version" "7.0.26"
@@ -3792,10 +3793,10 @@
   "resolved" "https://registry.npmjs.org/destroy/-/destroy-1.2.0.tgz"
   "version" "1.2.0"
 
-"detect-gpu@^3.1.28":
-  "integrity" "sha512-WUOk8imHH56AWVt6iHry69qbNEFsPjtS6qsinurfxeI3bVYQZzFk8zECTaodLxfeRad7QspDjjkJWkp5vBo8WA=="
-  "resolved" "https://registry.npmjs.org/detect-gpu/-/detect-gpu-3.1.30.tgz"
-  "version" "3.1.30"
+"detect-gpu@^4.0.14":
+  "integrity" "sha512-T67HE5+ONONN8rPXCBJPupyCg2QT8+l2NUUMuPxAppsMJBDPG/Jg0URLs6GyDzLm2niUE+oncIHSuy3VinoPeQ=="
+  "resolved" "https://registry.npmjs.org/detect-gpu/-/detect-gpu-4.0.50.tgz"
+  "version" "4.0.50"
   dependencies:
     "webgl-constants" "^1.1.1"
 
@@ -6471,6 +6472,11 @@
   "resolved" "https://registry.npmjs.org/merge2/-/merge2-1.4.1.tgz"
   "version" "1.4.1"
 
+"meshline@^2.0.4":
+  "integrity" "sha512-Jh6DJl/zLqA4xsKvGv5950jr2ukyXQE1wgxs8u94cImHrvL6soVIggqjP+2hVHZXGYaKnWszhtjuCbKNeQyYiw=="
+  "resolved" "https://registry.npmjs.org/meshline/-/meshline-2.0.4.tgz"
+  "version" "2.0.4"
+
 "methods@~1.1.2":
   "integrity" "sha512-iclAHeNqNm68zFtnZ0e+1L2yUIdvzNoauKU4WBA3VvH/vPFieF7qfRlwUZU+DA9P9bPXIS90ulxoUoCH23sV2w=="
   "resolved" "https://registry.npmjs.org/methods/-/methods-1.1.2.tgz"
@@ -8883,12 +8889,12 @@
   dependencies:
     "any-promise" "^1.0.0"
 
-"three-mesh-bvh@^0.5.4":
+"three-mesh-bvh@^0.5.7":
   "integrity" "sha512-VTIgfjz8aFoPKTQoMIQQv9jJD4ybFRZuKKE1/kqy78FQcuHQ0+iIWv7C5cSb2inlvs7bNMVY3yRx3RXGZfrvzQ=="
   "resolved" "https://registry.npmjs.org/three-mesh-bvh/-/three-mesh-bvh-0.5.24.tgz"
   "version" "0.5.24"
 
-"three-stdlib@^2.8.7":
+"three-stdlib@^2.8.9":
   "integrity" "sha512-/LxvLQIXAku2peNJCCFpCq/P7jGpLKFeAHKdSpHFqJjbElKTa+7EQg60NdL73lhegLtLz8oAsFONS9R2wb3RQg=="
   "resolved" "https://registry.npmjs.org/three-stdlib/-/three-stdlib-2.26.11.tgz"
   "version" "2.26.11"
@@ -8903,7 +8909,7 @@
     "potpack" "^1.0.1"
     "zstddec" "^0.0.2"
 
-"three@>= 0.123.0", "three@>=0.103.0", "three@>=0.126", "three@>=0.128.0", "three@>=0.133", "three@>=0.137", "three@0.137.5", "three@0.x":
+"three@^0.137.5", "three@>= 0.123.0", "three@>=0.103.0", "three@>=0.126", "three@>=0.128.0", "three@>=0.133", "three@>=0.137", "three@0.x":
   "integrity" "sha512-rTyr+HDFxjnN8+N/guZjDgfVxgHptZQpf6xfL/Mo7a5JYIFwK6tAq3bzxYYB4Ae0RosDZlDuP+X5aXDXz+XnHQ=="
   "resolved" "https://registry.npmjs.org/three/-/three-0.137.5.tgz"
   "version" "0.137.5"
@@ -8964,24 +8970,25 @@
   dependencies:
     "punycode" "^2.1.1"
 
-"troika-three-text@^0.45.0":
-  "integrity" "sha512-TJGjiK/7MhJOdB+BhfW5WYuY5uPF27cPU+0D/PArCQceS8ee9MyP2YRZY2KF8coLwAXFTLJUbLiHlfw2eOb0gA=="
-  "resolved" "https://registry.npmjs.org/troika-three-text/-/troika-three-text-0.45.1.tgz"
-  "version" "0.45.1"
+"troika-three-text@^0.46.3":
+  "integrity" "sha512-Qsv0HhUKTZgSmAJs5wvO7YlBoJSP9TGPLmrg+K9pbQq4lseQdcevbno/WI38bwJBZ/qS56hvfqEzY0zUEFzDIw=="
+  "resolved" "https://registry.npmjs.org/troika-three-text/-/troika-three-text-0.46.4.tgz"
+  "version" "0.46.4"
   dependencies:
     "bidi-js" "^1.0.2"
-    "troika-three-utils" "^0.45.0"
-    "troika-worker-utils" "^0.45.0"
+    "troika-three-utils" "^0.46.0"
+    "troika-worker-utils" "^0.46.0"
+    "webgl-sdf-generator" "1.1.1"
 
-"troika-three-utils@^0.45.0":
-  "integrity" "sha512-VJqEx8aww2El/zSbbnmjdhaAOQ4LM0CVJmKh385Vi/CzruhMmWEaunMRI/J1vh4MbbGo+dREu73FkMkr/PXypA=="
-  "resolved" "https://registry.npmjs.org/troika-three-utils/-/troika-three-utils-0.45.0.tgz"
-  "version" "0.45.0"
+"troika-three-utils@^0.46.0":
+  "integrity" "sha512-llHyrXAcwzr0bpg80GxsIp73N7FuImm4WCrKDJkAqcAsWmE5pfP9+Qzw+oMWK1P/AdHQ79eOrOl9NjyW4aOw0w=="
+  "resolved" "https://registry.npmjs.org/troika-three-utils/-/troika-three-utils-0.46.0.tgz"
+  "version" "0.46.0"
 
-"troika-worker-utils@^0.45.0":
-  "integrity" "sha512-pEO8u7+29dG5SbmGUg0wqXPEe+r+Hd0ibKf75tjH2aoR7ZPlRwUzRTvPURDlDNFF4KysDLvMCdHnyslG9IG5Hw=="
-  "resolved" "https://registry.npmjs.org/troika-worker-utils/-/troika-worker-utils-0.45.0.tgz"
-  "version" "0.45.0"
+"troika-worker-utils@^0.46.0":
+  "integrity" "sha512-bzOx5f2ZBxkFhXtIvDJlLn2AI3bzCkGVbCndl/2dL5QZrwHEKl45OEIilCxYQQWJG1rEbOD9O80tMjoYjw19OA=="
+  "resolved" "https://registry.npmjs.org/troika-worker-utils/-/troika-worker-utils-0.46.0.tgz"
+  "version" "0.46.0"
 
 "tryer@^1.0.1":
   "integrity" "sha512-c3zayb8/kWWpycWYg87P71E1S1ZL6b6IJxfb5fvsUgsf0S2MVGaDhDXXjDMpdCpfWXqptc+4mXwmiy1ypXqRAA=="
@@ -9301,6 +9308,11 @@
 "webgl-constants@^1.1.1":
   "integrity" "sha512-LkBXKjU5r9vAW7Gcu3T5u+5cvSvh5WwINdr0C+9jpzVB41cjQAP5ePArDtk/WHYdVj0GefCgM73BA7FlIiNtdg=="
   "resolved" "https://registry.npmjs.org/webgl-constants/-/webgl-constants-1.1.1.tgz"
+  "version" "1.1.1"
+
+"webgl-sdf-generator@1.1.1":
+  "integrity" "sha512-9Z0JcMTFxeE+b2x1LJTdnaT8rT8aEp7MVxkNwoycNmJWwPdzoXzMh0BjJSh/AEFP+KPYZUli814h8bJZFIZ2jA=="
+  "resolved" "https://registry.npmjs.org/webgl-sdf-generator/-/webgl-sdf-generator-1.1.1.tgz"
   "version" "1.1.1"
 
 "webidl-conversions@^4.0.2":
