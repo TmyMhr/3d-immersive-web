@@ -31,6 +31,8 @@ export const Player = () => {
   const [ref, api] = useSphere(() => ({
     mass: 1,
     type: "Dynamic",
+    linearDamping: 0.1, // Add linear damping to control linear velocity damping
+    angularDamping: 0.1,
     position: [0, 10, 5], // Set the initial position to [0, 10, 0] or any desired spawn point on the ground
   }));
   const { forward, backward, left, right, jump } = usePlayerControls();
