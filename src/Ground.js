@@ -8,8 +8,8 @@ export const Ground = (props) => {
  
   return (
     <mesh ref={ref} receiveShadow>
-      <planeGeometry args={[100, 100]} />
-      <meshStandardMaterial color="white" />
+      <planeGeometry args={[0.1, 0.1]} />
+      <meshStandardMaterial  />
     </mesh>
   )
 }
