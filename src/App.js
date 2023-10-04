@@ -7,8 +7,7 @@ import Model from './Model'; // Import the Model component as a named import
 import { Player } from './Player';
 import { Ground } from './Ground';
 import { Cubes } from './Cube';
-import { UserInterFaceTest } from './userInterfaceTest';
-
+import Ocean  from "./Ocean"
 function generateRandomPosition(min, max, baseY) {
   const x = Math.random() * (max - min) + min;
   const z = Math.random() * (max - min) + min;
@@ -35,7 +34,20 @@ export default function App() {
   );
 
   return (
-    <Canvas shadows gl={{ alpha: false }} camera={{ fov: 45 }}>
+    <Canvas 
+    shadows
+    gl={{ alpha: false, antialias: true }}
+    camera={{ fov: 45 }}
+    gammaFactor={2.2}
+    shadowBias={-0.001}
+    colorManagement={true}
+    fog={new THREE.Fog(0xcce0ff, 10, 1000)}
+    physicallyCorrectLights={true}
+    concurrent={true}
+    sRGB={true}
+    onCreated={(state) => {
+      // Custom initialization code
+    }}>
       <Stats />
       <Sky
   distance={450000}
@@ -54,12 +66,12 @@ export default function App() {
         color={new THREE.Color(0xffaa33)} // Warm orange color
       />
       <Physics gravity={[0, -30, 0]}>
+     <Ocean />
         <Ground />
         <Player />
         {Array.from({ length: numModels }).map((_, index) => (
           <Model key={index} position={randomPositions[index]} rotation={randomRotations[index]} />
         ))}
-        <UserInterFaceTest />
         <Cubes />
         {/* Add the ModelViewer component here */}
       </Physics>
