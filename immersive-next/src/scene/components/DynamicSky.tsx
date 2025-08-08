@@ -12,15 +12,15 @@ export default function DynamicSky(): JSX.Element {
     return () => clearInterval(timer);
   }, []);
 
+  // Make sun move in a larger, warmer arc similar to your original
+  const angle = timeOfDay * Math.PI * 2;
   const sunPosition: [number, number, number] = [
-    Math.cos(timeOfDay * Math.PI * 2),
-    Math.sin(timeOfDay * Math.PI * 2),
+    Math.cos(angle) * 100,
+    Math.sin(angle) * 50 + 10,
     0,
   ];
 
-  return (
-    <Sky distance={450000} sunPosition={sunPosition} azimuth={0.25 + timeOfDay * 0.5} />
-  );
+  return <Sky distance={450000} sunPosition={sunPosition} azimuth={0.25 + timeOfDay * 0.5} />;
 }
 
 

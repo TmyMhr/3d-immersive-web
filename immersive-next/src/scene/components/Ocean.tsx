@@ -10,10 +10,7 @@ export default function Ocean({ sunPosition = [100, 50, 100] as [number, number,
   const ref = useRef<any>();
   const { clock } = useThree();
 
-  const waterNormals = useLoader(
-    THREE.TextureLoader,
-    "https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/waternormals.jpg"
-  );
+  const waterNormals = useLoader(THREE.TextureLoader, "/assets/waternormals.jpeg");
   waterNormals.wrapS = waterNormals.wrapT = THREE.RepeatWrapping;
 
   const geom = useMemo(() => new THREE.PlaneGeometry(50000, 50000, 64, 64), []);
@@ -29,7 +26,7 @@ export default function Ocean({ sunPosition = [100, 50, 100] as [number, number,
       waterColor: new THREE.Color(0x004d99),
       distortionScale: 3.7,
       fog: true,
-      side: THREE.DoubleSide,
+      side: THREE.FrontSide,
     }),
     [waterNormals, sunPosition]
   );

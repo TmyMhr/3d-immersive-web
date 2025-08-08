@@ -6,12 +6,14 @@ import { Physics } from "@react-three/cannon";
 import DynamicSky from "./components/DynamicSky";
 import Ocean from "./components/Ocean";
 import Player from "./components/Player";
+import MobileControls from "./components/MobileControls";
 
 export default function Scene(): JSX.Element {
   return (
-    <div style={{ width: "100vw", height: "100vh" }}>
+    <div style={{ width: "100vw", height: "100vh", position: "relative" }}>
       <Canvas
         shadows
+        dpr={[1, 1.75]}
         gl={{ alpha: false, antialias: true }}
         camera={{ fov: 45 }}
         fog={new THREE.Fog(0xcce0ff, 10, 1000)}
@@ -27,6 +29,7 @@ export default function Scene(): JSX.Element {
         </Physics>
         <PointerLockControls />
       </Canvas>
+      <MobileControls />
     </div>
   );
 }
