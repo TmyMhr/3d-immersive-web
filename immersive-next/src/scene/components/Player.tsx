@@ -44,12 +44,12 @@ function usePlayerControls() {
   return movement;
 }
 
-export default function Player(): JSX.Element {
+export default function Player(): React.ReactElement {
   const [ref, api] = useSphere(() => ({
     mass: 1,
     type: "Dynamic",
-    position: [0, 2, 0],
-    args: [0.5],
+    position: [0, 5, 0], // Start higher up
+    args: [0.8], // Slightly larger collision sphere
   }));
 
   const { forward, backward, left, right, jump } = usePlayerControls() as any;
@@ -97,7 +97,7 @@ export default function Player(): JSX.Element {
       }
     }
 
-    camera.position.set(x, y + 1.5 + jumpOffset.current, z);
+    camera.position.set(x, y + 2.2 + jumpOffset.current, z); // Higher camera for better perspective
 
     frontVector.set(0, 0, Number(back) - Number(fwd));
     sideVector.set(Number(lft) - Number(rgt), 0, 0);
@@ -113,10 +113,27 @@ export default function Player(): JSX.Element {
   });
 
   return (
-    <mesh ref={ref as any} castShadow>
-      <sphereGeometry args={[0.5, 16, 16]} />
-      <meshStandardMaterial color="hotpink" />
-    </mesh>
+    <group ref={ref as any}>
+      {/* Player body - capsule-like shape */}
+      <mesh position={[0, 0, 0]} castShadow>
+        <capsuleGeometry args={[0.4, 1.2]} />
+        <meshStandardMaterial color="#4a90e2" />
+      </mesh>
+      {/* Player head */}
+      <mesh position={[0, 0.8, 0]} castShadow>
+        <sphereGeometry args={[0.3, 12, 8]} />
+        <meshStandardMaterial color="#ffdbac" />
+      </mesh>
+      {/* Simple eyes */}
+      <mesh position={[-0.1, 0.9, 0.25]} castShadow>
+        <sphereGeometry args={[0.05, 8, 8]} />
+        <meshStandardMaterial color="#000" />
+      </mesh>
+      <mesh position={[0.1, 0.9, 0.25]} castShadow>
+        <sphereGeometry args={[0.05, 8, 8]} />
+        <meshStandardMaterial color="#000" />
+      </mesh>
+    </group>
   );
 }
 

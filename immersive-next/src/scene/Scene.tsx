@@ -1,6 +1,6 @@
 "use client";
 import * as THREE from "three";
-import { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { PointerLockControls, Stats } from "@react-three/drei";
 import { Physics } from "@react-three/cannon";
@@ -8,16 +8,11 @@ import DynamicSky from "./components/DynamicSky";
 import Ocean from "./components/Ocean";
 import Player from "./components/Player";
 import MobileControls from "./components/MobileControls";
+import IslandWorld from "./components/IslandWorld";
 
-export default function Scene(): JSX.Element {
-  const [timeOfDay, setTimeOfDay] = useState(0);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeOfDay((t) => (t + 0.01) % 1);
-    }, 100);
-    return () => clearInterval(timer);
-  }, []);
+export default function Scene(): React.ReactElement {
+  // Lock to daytime (midday)
+  const [timeOfDay] = useState(0.25);
 
   const { sunPosition, azimuth } = useMemo(() => {
     const angle = timeOfDay * Math.PI * 2;
@@ -37,22 +32,27 @@ export default function Scene(): JSX.Element {
         dpr={[1, 1.75]}
         gl={{ alpha: false, antialias: true }}
         camera={{ fov: 45 }}
-        fog={new THREE.Fog(0xcce0ff, 10, 1000)}
-        onCreated={() => {}}
+        onCreated={({ gl, scene }) => {
+          scene.fog = new THREE.Fog(0xdfefff, 20, 2000);
+          scene.background = new THREE.Color(0xdfefff);
+          gl.toneMappingExposure = 1.2;
+        }}
       >
         <Stats />
         <DynamicSky sunPosition={sunPosition} azimuth={azimuth} />
-        <ambientLight intensity={0.2} color={new THREE.Color(0xffcc66)} />
+        <ambientLight intensity={0.5} color={new THREE.Color(0xfff0cc)} />
+        <hemisphereLight color={new THREE.Color(0xb1e1ff)} groundColor={new THREE.Color(0xb97a20)} intensity={0.6} />
         <directionalLight
           castShadow
-          intensity={0.8}
-          color={new THREE.Color(0xffeecc)}
+          intensity={1.4}
+          color={new THREE.Color(0xffffff)}
           position={sunPosition}
           shadow-mapSize-width={1024}
           shadow-mapSize-height={1024}
         />
-        <Physics gravity={[0, 0, 0]}>
+        <Physics gravity={[0, -9.82, 0]}>
           <Ocean sunPosition={sunPosition} />
+          <IslandWorld />
           <Player />
         </Physics>
         <PointerLockControls />
