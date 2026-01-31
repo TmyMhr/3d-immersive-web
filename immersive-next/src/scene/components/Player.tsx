@@ -7,6 +7,8 @@ import { useInputStore } from "../store/input";
 
 const MOVE_SPEED = 6;
 const ACCEL = 20;
+const JUMP_FORCE = 4;
+
 const keys: Record<string, "forward" | "backward" | "left" | "right" | "jump"> = {
   KeyW: "forward",
   KeyS: "backward",
@@ -50,6 +52,8 @@ export default function Player(): React.ReactElement {
     type: "Dynamic",
     position: [0, 5, 0], // Start higher up
     args: [0.8], // Slightly larger collision sphere
+    fixedRotation: true, // Prevent player from rolling
+    linearDamping: 0.1,
   }));
 
   const { forward, backward, left, right, jump } = usePlayerControls() as any;
@@ -58,8 +62,6 @@ export default function Player(): React.ReactElement {
   const { camera } = useThree();
   const velocity = useRef<[number, number, number]>([0, 0, 0]);
   const position = useRef<[number, number, number]>([0, 0, 0]);
-  const jumpOffset = useRef(0);
-  const jumpVel = useRef(0);
   const prevJumpDown = useRef(false);
 
   useEffect(() => {
@@ -73,43 +75,68 @@ export default function Player(): React.ReactElement {
 
   useFrame((_, dt) => {
     const [x, y, z] = position.current;
-    // Simple jump arc on the camera without changing body Y
-    const t = 0.25;
-    const fwd = forward || mobileMove.y > t;
-    const back = backward || mobileMove.y < -t;
-    const lft = left || mobileMove.x < -t;
-    const rgt = right || mobileMove.x > t;
+    const fwd = forward || mobileMove.y > 0.25;
+    const back = backward || mobileMove.y < -0.25;
+    const lft = left || mobileMove.x < -0.25;
+    const rgt = right || mobileMove.x > 0.25;
     const wantJump = jump || mobileJump;
 
-    const onGround = jumpOffset.current <= 0.0001;
-    if (wantJump && !prevJumpDown.current && onGround) {
-      jumpVel.current = 3.5; // jump impulse
-    }
-    prevJumpDown.current = !!wantJump;
+    // Camera follows player
+    camera.position.set(x, y + 1.8, z); // Adjust camera height
 
-    // Gravity integration for the jump offset
-    if (!onGround || jumpVel.current > 0) {
-      jumpVel.current -= 9.8 * dt;
-      jumpOffset.current += jumpVel.current * dt;
-      if (jumpOffset.current < 0) {
-        jumpOffset.current = 0;
-        jumpVel.current = 0;
-      }
-    }
+    // Calculate movement direction
+    const front = new THREE.Vector3(0, 0, 0);
+    const rightV = new THREE.Vector3(0, 0, 0);
+    const moveDir = new THREE.Vector3(0, 0, 0);
 
-    camera.position.set(x, y + 2.2 + jumpOffset.current, z); // Higher camera for better perspective
+    // Get camera forward direction projected on XZ plane
+    front.set(0, 0, -1).applyQuaternion(camera.quaternion);
+    front.y = 0;
+    front.normalize();
 
-    frontVector.set(0, 0, Number(back) - Number(fwd));
-    sideVector.set(Number(lft) - Number(rgt), 0, 0);
-    direction.subVectors(frontVector, sideVector).normalize().applyEuler(camera.rotation);
+    // Get camera right direction projected on XZ plane
+    rightV.set(1, 0, 0).applyQuaternion(camera.quaternion);
+    rightV.y = 0;
+    rightV.normalize();
 
-    // Use subscribed velocity from effect
+    // Combine inputs
+    if (fwd) moveDir.add(front);
+    if (back) moveDir.sub(front);
+    if (rgt) moveDir.add(rightV);
+    if (lft) moveDir.sub(rightV);
+    
+    moveDir.normalize();
+
+    // Apply movement
     currentVelocity.set(velocity.current[0], velocity.current[1], velocity.current[2]);
-    const target = direction.multiplyScalar(MOVE_SPEED);
+    
+    // Underwater logic
+    const isUnderwater = y < -0.5; // Slightly below surface
+    const speed = isUnderwater ? MOVE_SPEED * 0.5 : MOVE_SPEED;
+    
+    const target = moveDir.multiplyScalar(speed);
+    
+    // Apply damping for smooth movement
     const vx = THREE.MathUtils.damp(currentVelocity.x, target.x, ACCEL, dt);
     const vz = THREE.MathUtils.damp(currentVelocity.z, target.z, ACCEL, dt);
-    // @ts-ignore
-    api.velocity.set(vx, 0, vz);
+    
+    // Jump logic (Real physics)
+    let vy = velocity.current[1];
+    
+    // Simple ground check based on velocity
+    // This is a heuristic; for production you'd use a raycast
+    const isGrounded = Math.abs(vy) < 0.1;
+    
+    if (wantJump && !prevJumpDown.current) {
+      if (isGrounded || isUnderwater) {
+        vy = JUMP_FORCE; // Apply instant upward velocity
+      }
+    }
+    prevJumpDown.current = !!wantJump;
+    
+    // Apply velocity
+    // We must pass current Y velocity to let gravity work
+    api.velocity.set(vx, vy, vz);
   });
 
   return (
@@ -136,5 +163,3 @@ export default function Player(): React.ReactElement {
     </group>
   );
 }
-
-

@@ -3,10 +3,11 @@ import * as THREE from "three";
 import React, { useMemo, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { PointerLockControls, Stats } from "@react-three/drei";
-import { Physics } from "@react-three/cannon";
+import { Physics, Debug } from "@react-three/cannon";
 import DynamicSky from "./components/DynamicSky";
 import Ocean from "./components/Ocean";
 import Player from "./components/Player";
+import SeaFloor from "./components/SeaFloor";
 import MobileControls from "./components/MobileControls";
 import IslandWorld from "./components/IslandWorld";
 
@@ -51,9 +52,12 @@ export default function Scene(): React.ReactElement {
           shadow-mapSize-height={1024}
         />
         <Physics gravity={[0, -9.82, 0]}>
-          <Ocean sunPosition={sunPosition} />
-          <IslandWorld />
-          <Player />
+          <Debug color="black" scale={1.1}>
+            <Ocean sunPosition={sunPosition} />
+            <SeaFloor />
+            <IslandWorld />
+            <Player />
+          </Debug>
         </Physics>
         <PointerLockControls />
       </Canvas>

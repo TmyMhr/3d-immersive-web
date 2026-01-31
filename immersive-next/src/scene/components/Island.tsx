@@ -1,8 +1,10 @@
 "use client";
 import React, { useMemo } from 'react';
-import { useBox } from '@react-three/cannon';
+import { useTrimesh } from '@react-three/cannon';
 import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
+import Rock from './Rock';
+import Tree from './Tree';
 
 interface IslandProps {
   position: [number, number, number];
@@ -53,12 +55,17 @@ export default function Island({
   }, [size]);
 
   // Physics collision for the island
-  const [ref] = useBox(() => ({
-    position: [position[0], position[1] - size[1] / 2, position[2]],
-    args: size,
-    type: 'Static',
-    material: { friction: 0.8 }
-  }));
+  const [ref] = useTrimesh(() => {
+    const vertices = terrainGeometry.attributes.position.array;
+    const indices = terrainGeometry.index ? terrainGeometry.index.array : Object.keys(vertices).map(Number);
+    
+    return {
+      args: [vertices as Float32Array, indices as Float32Array],
+      position: position, // No need to offset Y for trimesh as it matches geometry exactly
+      type: 'Static',
+      material: { friction: 0.8 }
+    };
+  }, [terrainGeometry, position]);
 
   // Load textures at top level
   const [grass, dirt] = useTexture(['/assets/grass.jpg', '/assets/dirt.jpg']);
@@ -92,10 +99,10 @@ export default function Island({
   }, [islandType, color]);
 
   // Generate natural rock formations
-  const generateRocks = () => {
-    if (!hasRocks) return null;
+  const rocks = useMemo(() => {
+    if (!hasRocks) return [];
     
-    const rocks = [];
+    const items = [];
     const numRocks = 3 + Math.floor(Math.random() * 4);
     
     for (let i = 0; i < numRocks; i++) {
@@ -107,31 +114,20 @@ export default function Island({
       const rockZ = Math.sin(angle) * distance;
       const rockY = size[1] * 0.3 + rockSize * 0.5;
       
-      rocks.push(
-        <mesh 
-          key={i}
-          position={[rockX, rockY, rockZ]} 
-          castShadow 
-          receiveShadow
-          rotation={[Math.random() * 0.3, Math.random() * Math.PI, Math.random() * 0.3]}
-        >
-          <dodecahedronGeometry args={[rockSize]} />
-          <meshStandardMaterial 
-            color={new THREE.Color().setHSL(0.1, 0.2, 0.3 + Math.random() * 0.2)}
-            roughness={0.9}
-            metalness={0.1}
-          />
-        </mesh>
-      );
+      items.push({
+        position: [rockX, rockY, rockZ] as [number, number, number],
+        size: rockSize,
+        rotation: [Math.random() * 0.3, Math.random() * Math.PI, Math.random() * 0.3] as [number, number, number]
+      });
     }
-    return rocks;
-  };
+    return items;
+  }, [hasRocks, size]);
 
   // Generate simple vegetation
-  const generateTrees = () => {
-    if (!hasTrees || islandType === 'rocky' || islandType === 'desert') return null;
+  const trees = useMemo(() => {
+    if (!hasTrees || islandType === 'rocky' || islandType === 'desert') return [];
     
-    const trees = [];
+    const items = [];
     const numTrees = 2 + Math.floor(Math.random() * 3);
     
     for (let i = 0; i < numTrees; i++) {
@@ -145,26 +141,14 @@ export default function Island({
       const trunkHeight = 1.5 + Math.random() * 1;
       const crownSize = 0.8 + Math.random() * 0.4;
       
-      trees.push(
-        <group key={i} position={[treeX, treeY, treeZ]}>
-          {/* Tree trunk */}
-          <mesh castShadow>
-            <cylinderGeometry args={[0.15, 0.2, trunkHeight]} />
-            <meshStandardMaterial color="#4A3728" roughness={0.8} />
-          </mesh>
-          {/* Tree crown */}
-          <mesh position={[0, trunkHeight * 0.7, 0]} castShadow>
-            <sphereGeometry args={[crownSize, 8, 6]} />
-            <meshStandardMaterial 
-              color={islandType === 'tropical' ? "#2D5016" : "#4A6741"} 
-              roughness={0.7}
-            />
-          </mesh>
-        </group>
-      );
+      items.push({
+        position: [treeX, treeY, treeZ] as [number, number, number],
+        trunkHeight,
+        crownSize
+      });
     }
-    return trees;
-  };
+    return items;
+  }, [hasTrees, islandType, size]);
 
   return (
     <group position={position}>
@@ -181,15 +165,30 @@ export default function Island({
       </mesh>
       
       {/* Physics collision box (invisible) */}
-      <mesh ref={ref as any} visible={false}>
-        <boxGeometry args={size} />
+      <mesh visible={false}>
+        {/* Visual representation handled by useTrimesh ref attachment to group or separate mesh */}
       </mesh>
       
       {/* Natural rock formations */}
-      {generateRocks()}
+      {rocks.map((rock, i) => (
+        <Rock 
+          key={i}
+          position={rock.position}
+          size={rock.size}
+          rotation={rock.rotation}
+        />
+      ))}
       
       {/* Simple vegetation */}
-      {generateTrees()}
+      {trees.map((tree, i) => (
+        <Tree 
+          key={i}
+          position={tree.position}
+          trunkHeight={tree.trunkHeight}
+          crownSize={tree.crownSize}
+          type={islandType === 'tropical' ? 'tropical' : 'temperate'}
+        />
+      ))}
       
       {/* Beach sand ring for tropical islands */}
       {islandType === 'tropical' && (
