@@ -4,8 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useSphere } from "@react-three/cannon";
 import { useThree, useFrame } from "@react-three/fiber";
 import { useInputStore } from "../store/input";
-import { useTouchDevice } from "../hooks/useTouchDevice";
-import { useQualityProfile } from "../hooks/useQualityProfile";
+import { useDevice } from "../context/DeviceContext";
 
 const MOVE_SPEED = 6;
 const ACCEL = 20;
@@ -34,7 +33,9 @@ function usePlayerControls() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const field = moveFieldByKey(e.code);
-      if (field) setMovement((m) => ({ ...m, [field]: true }));
+      if (!field) return;
+      if (field === "jump") e.preventDefault();
+      setMovement((m) => ({ ...m, [field]: true }));
     };
     const handleKeyUp = (e: KeyboardEvent) => {
       const field = moveFieldByKey(e.code);
@@ -51,9 +52,10 @@ function usePlayerControls() {
 }
 
 export default function Player(): React.ReactElement {
-  const isTouch = useTouchDevice();
-  const quality = useQualityProfile();
+  const { isTouch, quality } = useDevice();
   const headSegments: [number, number] = quality.isMobile ? [8, 6] : [12, 8];
+
+  const isGrounded = useRef(false);
 
   const [ref, api] = useSphere(() => ({
     mass: 1,
@@ -62,6 +64,13 @@ export default function Player(): React.ReactElement {
     args: [0.8],
     fixedRotation: true,
     linearDamping: 0.1,
+    onCollide: (e) => {
+      if (e.contact.bi.id === e.body.id) {
+        if (e.contact.ni[1] > 0.5) isGrounded.current = true;
+      } else if (e.contact.nj[1] > 0.5) {
+        isGrounded.current = true;
+      }
+    },
   }));
 
   const { forward, backward, left, right, jump } = usePlayerControls();
@@ -92,6 +101,8 @@ export default function Player(): React.ReactElement {
 
   useFrame((_, dt) => {
     const [x, y, z] = position.current;
+    const grounded = isGrounded.current;
+    isGrounded.current = false;
 
     if (isTouch) {
       if (!cameraInitialized.current) {
@@ -100,8 +111,14 @@ export default function Player(): React.ReactElement {
         cameraInitialized.current = true;
       }
       const look = consumeLookDelta();
-      yaw.current -= look.x;
-      pitch.current = THREE.MathUtils.clamp(pitch.current - look.y, -PITCH_LIMIT, PITCH_LIMIT);
+      if (look.x !== 0 || look.y !== 0) {
+        yaw.current -= look.x;
+        pitch.current = THREE.MathUtils.clamp(
+          pitch.current - look.y,
+          -PITCH_LIMIT,
+          PITCH_LIMIT
+        );
+      }
       camera.rotation.order = "YXZ";
       camera.rotation.y = yaw.current;
       camera.rotation.x = pitch.current;
@@ -142,10 +159,9 @@ export default function Player(): React.ReactElement {
     const vz = THREE.MathUtils.damp(currentVelocity.current.z, target.z, ACCEL, dt);
 
     let vy = velocity.current[1];
-    const isGrounded = Math.abs(vy) < 0.1;
     const wantJump = jump || mobileJump;
 
-    if (wantJump && !prevJumpDown.current && (isGrounded || isUnderwater)) {
+    if (wantJump && !prevJumpDown.current && (grounded || isUnderwater)) {
       vy = JUMP_FORCE;
     }
     prevJumpDown.current = !!wantJump;
@@ -154,7 +170,7 @@ export default function Player(): React.ReactElement {
   });
 
   return (
-    <group ref={ref as React.RefObject<THREE.Group>}>
+    <group ref={ref as unknown as React.RefObject<THREE.Group>}>
       <mesh castShadow={quality.shadows}>
         <capsuleGeometry args={[0.4, 1.2]} />
         <meshStandardMaterial color="#4a90e2" />

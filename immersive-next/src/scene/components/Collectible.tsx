@@ -1,7 +1,6 @@
 "use client";
 import React, { useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { useSphere } from "@react-three/cannon";
 import * as THREE from "three";
 import { useQualityProfile } from "../hooks/useQualityProfile";
 
@@ -26,12 +25,7 @@ export default function Collectible({
   const { camera } = useThree();
   const quality = useQualityProfile();
   const playerPos = useRef(new THREE.Vector3());
-
-  const [ref] = useSphere(() => ({
-    position,
-    args: [size],
-    type: "Static",
-  }));
+  const crystalPos = useRef(new THREE.Vector3(...position));
 
   const collect = () => {
     if (collectedRef.current) return;
@@ -42,7 +36,7 @@ export default function Collectible({
   };
 
   useFrame((state) => {
-    if (collected) return;
+    if (collectedRef.current) return;
 
     if (meshRef.current) {
       meshRef.current.position.y =
@@ -51,8 +45,7 @@ export default function Collectible({
     }
 
     playerPos.current.set(camera.position.x, camera.position.y - 1.8, camera.position.z);
-    const crystalPos = new THREE.Vector3(...position);
-    if (playerPos.current.distanceTo(crystalPos) < COLLECT_RADIUS) {
+    if (playerPos.current.distanceTo(crystalPos.current) < COLLECT_RADIUS) {
       collect();
     }
   });
@@ -60,7 +53,7 @@ export default function Collectible({
   if (collected) return null;
 
   return (
-    <group ref={ref as React.RefObject<THREE.Group>}>
+    <group position={position}>
       <mesh ref={meshRef} castShadow={quality.shadows} onClick={collect}>
         <octahedronGeometry args={[size, quality.isMobile ? 0 : 1]} />
         <meshStandardMaterial

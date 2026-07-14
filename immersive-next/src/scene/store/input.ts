@@ -3,10 +3,12 @@ import { create } from "zustand";
 
 type Vec2 = { x: number; y: number };
 
+// High-frequency look input kept in a ref to avoid per-frame store writes.
+export const lookDeltaRef = { x: 0, y: 0 };
+
 type InputState = {
   move: Vec2;
   jump: boolean;
-  lookDelta: Vec2;
   setMove: (v: Vec2) => void;
   setJump: (j: boolean) => void;
   addLookDelta: (v: Vec2) => void;
@@ -14,20 +16,24 @@ type InputState = {
   reset: () => void;
 };
 
-export const useInputStore = create<InputState>((set, get) => ({
+export const useInputStore = create<InputState>(() => ({
   move: { x: 0, y: 0 },
   jump: false,
-  lookDelta: { x: 0, y: 0 },
-  setMove: (v) => set({ move: v }),
-  setJump: (j) => set({ jump: j }),
-  addLookDelta: (v) =>
-    set((s) => ({
-      lookDelta: { x: s.lookDelta.x + v.x, y: s.lookDelta.y + v.y },
-    })),
+  setMove: (v) => useInputStore.setState({ move: v }),
+  setJump: (j) => useInputStore.setState({ jump: j }),
+  addLookDelta: (v) => {
+    lookDeltaRef.x += v.x;
+    lookDeltaRef.y += v.y;
+  },
   consumeLookDelta: () => {
-    const delta = get().lookDelta;
-    set({ lookDelta: { x: 0, y: 0 } });
+    const delta = { x: lookDeltaRef.x, y: lookDeltaRef.y };
+    lookDeltaRef.x = 0;
+    lookDeltaRef.y = 0;
     return delta;
   },
-  reset: () => set({ move: { x: 0, y: 0 }, jump: false, lookDelta: { x: 0, y: 0 } }),
+  reset: () => {
+    lookDeltaRef.x = 0;
+    lookDeltaRef.y = 0;
+    useInputStore.setState({ move: { x: 0, y: 0 }, jump: false });
+  },
 }));

@@ -10,8 +10,15 @@ import Player from "./components/Player";
 import SeaFloor from "./components/SeaFloor";
 import MobileControls from "./components/MobileControls";
 import IslandWorld from "./components/IslandWorld";
-import { useTouchDevice } from "./hooks/useTouchDevice";
-import { useQualityProfile } from "./hooks/useQualityProfile";
+import { DeviceProvider, useDevice, type QualityProfile } from "./context/DeviceContext";
+
+const LIGHT_COLORS = {
+  ambient: 0xfff0cc,
+  hemiSky: 0xb1e1ff,
+  hemiGround: 0xb97a20,
+  sun: 0xffffff,
+  fog: 0xdfefff,
+} as const;
 
 function SceneContent({
   sunPosition,
@@ -20,27 +27,33 @@ function SceneContent({
 }: {
   sunPosition: [number, number, number];
   azimuth: number;
-  quality: ReturnType<typeof useQualityProfile>;
+  quality: QualityProfile;
 }) {
   return (
     <>
       {quality.showStats && <Stats />}
-      <DynamicSky sunPosition={sunPosition} azimuth={azimuth} />
-      <ambientLight intensity={0.5} color={new THREE.Color(0xfff0cc)} />
+      <DynamicSky sunPosition={sunPosition} azimuth={azimuth} distance={quality.skyDistance} />
+      <ambientLight intensity={0.5} color={LIGHT_COLORS.ambient} />
       <hemisphereLight
-        color={new THREE.Color(0xb1e1ff)}
-        groundColor={new THREE.Color(0xb97a20)}
+        color={LIGHT_COLORS.hemiSky}
+        groundColor={LIGHT_COLORS.hemiGround}
         intensity={0.6}
       />
       <directionalLight
         castShadow={quality.shadows}
         intensity={1.4}
-        color={new THREE.Color(0xffffff)}
+        color={LIGHT_COLORS.sun}
         position={sunPosition}
         shadow-mapSize-width={quality.shadowMapSize}
         shadow-mapSize-height={quality.shadowMapSize}
+        shadow-camera-near={1}
+        shadow-camera-far={200}
+        shadow-camera-left={-80}
+        shadow-camera-right={80}
+        shadow-camera-top={80}
+        shadow-camera-bottom={-80}
       />
-      <Physics gravity={[0, -9.82, 0]}>
+      <Physics gravity={[0, -9.82, 0]} allowSleep>
         <Ocean sunPosition={sunPosition} quality={quality} />
         <SeaFloor castShadow={quality.shadows} />
         <IslandWorld castShadow={quality.shadows} />
@@ -50,10 +63,9 @@ function SceneContent({
   );
 }
 
-export default function Scene(): React.ReactElement {
+function SceneCanvas() {
   const [timeOfDay] = useState(0.25);
-  const isTouch = useTouchDevice();
-  const quality = useQualityProfile();
+  const { isTouch, quality } = useDevice();
 
   const { sunPosition, azimuth } = useMemo(() => {
     const angle = timeOfDay * Math.PI * 2;
@@ -74,8 +86,8 @@ export default function Scene(): React.ReactElement {
         gl={{ alpha: false, antialias: quality.antialias, powerPreference: "high-performance" }}
         camera={{ fov: 45, near: 0.1, far: 3000 }}
         onCreated={({ gl, scene }) => {
-          scene.fog = new THREE.Fog(0xdfefff, 20, quality.isMobile ? 1200 : 2000);
-          scene.background = new THREE.Color(0xdfefff);
+          scene.fog = new THREE.Fog(LIGHT_COLORS.fog, 20, quality.isMobile ? 1200 : 2000);
+          scene.background = new THREE.Color(LIGHT_COLORS.fog);
           gl.toneMappingExposure = 1.2;
         }}
       >
@@ -84,5 +96,13 @@ export default function Scene(): React.ReactElement {
       </Canvas>
       <MobileControls />
     </div>
+  );
+}
+
+export default function Scene(): React.ReactElement {
+  return (
+    <DeviceProvider>
+      <SceneCanvas />
+    </DeviceProvider>
   );
 }

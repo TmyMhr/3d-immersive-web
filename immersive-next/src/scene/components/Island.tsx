@@ -1,5 +1,5 @@
 "use client";
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useTrimesh } from '@react-three/cannon';
 import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
@@ -59,31 +59,29 @@ export default function Island({
   }, [size, terrainSegments]);
 
   // Physics collision for the island
-  useTrimesh(() => {
-    const vertices = terrainGeometry.attributes.position.array;
-    const indices = terrainGeometry.index
-      ? terrainGeometry.index.array
-      : Object.keys(vertices).map(Number);
+  useTrimesh(
+    () => {
+      const vertices = terrainGeometry.attributes.position.array;
+      const indices = terrainGeometry.index!.array;
 
-    return {
-      args: [vertices as Float32Array, indices as Float32Array],
-      position: position,
-      type: "Static" as const,
-      material: { friction: 0.8 },
-    };
-  });
+      return {
+        args: [vertices as Float32Array, indices as Uint16Array | Uint32Array],
+        position,
+        type: "Static" as const,
+        material: { friction: 0.8 },
+      };
+    },
+    undefined,
+    [terrainGeometry, position]
+  );
 
-  // Load textures at top level
   const [grass, dirt] = useTexture(['/assets/grass.jpg', '/assets/dirt.jpg']);
-  
-  // Configure texture tiling
-  useMemo(() => {
-    if (grass && dirt) {
-      grass.wrapS = grass.wrapT = THREE.RepeatWrapping;
-      grass.repeat.set(6, 6);
-      dirt.wrapS = dirt.wrapT = THREE.RepeatWrapping;
-      dirt.repeat.set(4, 4);
-    }
+
+  useEffect(() => {
+    grass.wrapS = grass.wrapT = THREE.RepeatWrapping;
+    grass.repeat.set(6, 6);
+    dirt.wrapS = dirt.wrapT = THREE.RepeatWrapping;
+    dirt.repeat.set(4, 4);
   }, [grass, dirt]);
   
   const textures = { grass, dirt };
@@ -169,13 +167,7 @@ export default function Island({
           metalness={islandMaterial.metalness}
         />
       </mesh>
-      
-      {/* Physics collision box (invisible) */}
-      <mesh visible={false}>
-        {/* Visual representation handled by useTrimesh ref attachment to group or separate mesh */}
-      </mesh>
-      
-      {/* Natural rock formations */}
+
       {rocks.map((rock, i) => (
         <Rock
           key={i}
