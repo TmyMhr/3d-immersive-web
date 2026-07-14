@@ -7,13 +7,15 @@ interface RockProps {
   size?: number;
   color?: string;
   rotation?: [number, number, number];
+  castShadow?: boolean;
 }
 
-export default function Rock({ 
-  position, 
-  size = 1, 
+export default function Rock({
+  position,
+  size = 1,
   color,
-  rotation = [0, 0, 0]
+  rotation = [0, 0, 0],
+  castShadow = true,
 }: RockProps) {
   
   // Use a default color if none provided, with some variation if it was generated
@@ -26,8 +28,8 @@ export default function Rock({
     <mesh 
       position={position} 
       rotation={rotation}
-      castShadow 
-      receiveShadow
+      castShadow={castShadow}
+      receiveShadow={castShadow}
     >
       <dodecahedronGeometry args={[size]} />
       <meshStandardMaterial 

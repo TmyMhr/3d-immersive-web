@@ -5,6 +5,7 @@ import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 import Rock from './Rock';
 import Tree from './Tree';
+import { useQualityProfile } from '../hooks/useQualityProfile';
 
 interface IslandProps {
   position: [number, number, number];
@@ -13,6 +14,7 @@ interface IslandProps {
   hasRocks?: boolean;
   hasTrees?: boolean;
   islandType?: 'tropical' | 'rocky' | 'grassy' | 'desert';
+  castShadow?: boolean;
 }
 
 export default function Island({ 
@@ -21,12 +23,14 @@ export default function Island({
   color = "#8B7355",
   hasRocks = true,
   hasTrees = true,
-  islandType = 'tropical'
+  islandType = 'tropical',
+  castShadow = true,
 }: IslandProps) {
-  
-  // Create more natural terrain geometry
+  const quality = useQualityProfile();
+  const terrainSegments = quality.isMobile ? 16 : 32;
+
   const terrainGeometry = useMemo(() => {
-    const geometry = new THREE.PlaneGeometry(size[0], size[2], 32, 32);
+    const geometry = new THREE.PlaneGeometry(size[0], size[2], terrainSegments, terrainSegments);
     const vertices = geometry.attributes.position.array as Float32Array;
     
     // Add height variation for natural terrain
@@ -52,20 +56,22 @@ export default function Island({
     geometry.rotateX(-Math.PI / 2); // Rotate to be horizontal
     
     return geometry;
-  }, [size]);
+  }, [size, terrainSegments]);
 
   // Physics collision for the island
-  const [ref] = useTrimesh(() => {
+  useTrimesh(() => {
     const vertices = terrainGeometry.attributes.position.array;
-    const indices = terrainGeometry.index ? terrainGeometry.index.array : Object.keys(vertices).map(Number);
-    
+    const indices = terrainGeometry.index
+      ? terrainGeometry.index.array
+      : Object.keys(vertices).map(Number);
+
     return {
       args: [vertices as Float32Array, indices as Float32Array],
-      position: position, // No need to offset Y for trimesh as it matches geometry exactly
-      type: 'Static',
-      material: { friction: 0.8 }
+      position: position,
+      type: "Static" as const,
+      material: { friction: 0.8 },
     };
-  }, [terrainGeometry, position]);
+  });
 
   // Load textures at top level
   const [grass, dirt] = useTexture(['/assets/grass.jpg', '/assets/dirt.jpg']);
@@ -153,7 +159,7 @@ export default function Island({
   return (
     <group position={position}>
       {/* Main island terrain */}
-      <mesh receiveShadow castShadow>
+      <mesh receiveShadow={castShadow} castShadow={castShadow}>
         <primitive object={terrainGeometry} />
         <meshStandardMaterial 
           map={textures.grass}
@@ -171,28 +177,30 @@ export default function Island({
       
       {/* Natural rock formations */}
       {rocks.map((rock, i) => (
-        <Rock 
+        <Rock
           key={i}
           position={rock.position}
           size={rock.size}
           rotation={rock.rotation}
+          castShadow={castShadow}
         />
       ))}
       
       {/* Simple vegetation */}
       {trees.map((tree, i) => (
-        <Tree 
+        <Tree
           key={i}
           position={tree.position}
           trunkHeight={tree.trunkHeight}
           crownSize={tree.crownSize}
           type={islandType === 'tropical' ? 'tropical' : 'temperate'}
+          castShadow={castShadow}
         />
       ))}
       
       {/* Beach sand ring for tropical islands */}
       {islandType === 'tropical' && (
-        <mesh position={[0, -size[1] * 0.4, 0]} receiveShadow>
+        <mesh position={[0, -size[1] * 0.4, 0]} receiveShadow={castShadow}>
           <ringGeometry args={[size[0] * 0.6, size[0] * 0.8, 16]} />
           <meshStandardMaterial 
             color="#F4E4BC" 

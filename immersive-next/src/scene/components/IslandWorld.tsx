@@ -5,7 +5,9 @@ import Collectible from './Collectible';
 import GameUI from './GameUI';
 import { islands, collectibles } from '../../data/worldConfig';
 
-export default function IslandWorld() {
+type Props = { castShadow?: boolean };
+
+export default function IslandWorld({ castShadow = true }: Props) {
   const [score, setScore] = useState(0);
   const totalCollectibles = collectibles.length;
 
@@ -22,13 +24,14 @@ export default function IslandWorld() {
       />
       
       {islands.map((island) => (
-        <Island 
+        <Island
           key={island.id}
-          position={island.position} 
+          position={island.position}
           size={island.size}
           islandType={island.type}
           hasTrees={island.hasTrees}
           hasRocks={island.hasRocks}
+          castShadow={castShadow}
         />
       ))}
       

@@ -4,10 +4,13 @@ import React, { useEffect, useRef, useState } from "react";
 import { useSphere } from "@react-three/cannon";
 import { useThree, useFrame } from "@react-three/fiber";
 import { useInputStore } from "../store/input";
+import { useTouchDevice } from "../hooks/useTouchDevice";
+import { useQualityProfile } from "../hooks/useQualityProfile";
 
 const MOVE_SPEED = 6;
 const ACCEL = 20;
 const JUMP_FORCE = 4;
+const PITCH_LIMIT = 1.4;
 
 const keys: Record<string, "forward" | "backward" | "left" | "right" | "jump"> = {
   KeyW: "forward",
@@ -18,9 +21,6 @@ const keys: Record<string, "forward" | "backward" | "left" | "right" | "jump"> =
 };
 
 const moveFieldByKey = (key: string) => keys[key];
-const direction = new THREE.Vector3();
-const frontVector = new THREE.Vector3();
-const sideVector = new THREE.Vector3();
 
 function usePlayerControls() {
   const [movement, setMovement] = useState({
@@ -32,10 +32,14 @@ function usePlayerControls() {
   });
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) =>
-      setMovement((m) => ({ ...m, [moveFieldByKey(e.code)]: true } as any));
-    const handleKeyUp = (e: KeyboardEvent) =>
-      setMovement((m) => ({ ...m, [moveFieldByKey(e.code)]: false } as any));
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const field = moveFieldByKey(e.code);
+      if (field) setMovement((m) => ({ ...m, [field]: true }));
+    };
+    const handleKeyUp = (e: KeyboardEvent) => {
+      const field = moveFieldByKey(e.code);
+      if (field) setMovement((m) => ({ ...m, [field]: false }));
+    };
     document.addEventListener("keydown", handleKeyDown);
     document.addEventListener("keyup", handleKeyUp);
     return () => {
@@ -47,119 +51,130 @@ function usePlayerControls() {
 }
 
 export default function Player(): React.ReactElement {
+  const isTouch = useTouchDevice();
+  const quality = useQualityProfile();
+  const headSegments: [number, number] = quality.isMobile ? [8, 6] : [12, 8];
+
   const [ref, api] = useSphere(() => ({
     mass: 1,
     type: "Dynamic",
-    position: [0, 5, 0], // Start higher up
-    args: [0.8], // Slightly larger collision sphere
-    fixedRotation: true, // Prevent player from rolling
+    position: [0, 5, 0],
+    args: [0.8],
+    fixedRotation: true,
     linearDamping: 0.1,
   }));
 
-  const { forward, backward, left, right, jump } = usePlayerControls() as any;
+  const { forward, backward, left, right, jump } = usePlayerControls();
   const mobileMove = useInputStore((s) => s.move);
   const mobileJump = useInputStore((s) => s.jump);
+  const consumeLookDelta = useInputStore((s) => s.consumeLookDelta);
   const { camera } = useThree();
   const velocity = useRef<[number, number, number]>([0, 0, 0]);
   const position = useRef<[number, number, number]>([0, 0, 0]);
   const prevJumpDown = useRef(false);
+  const yaw = useRef(0);
+  const pitch = useRef(0);
+  const cameraInitialized = useRef(false);
 
   useEffect(() => {
-    // @ts-ignore
-    api.velocity.subscribe((v: [number, number, number]) => (velocity.current = v));
-    // @ts-ignore
-    api.position.subscribe((p: [number, number, number]) => (position.current = p));
+    api.velocity.subscribe((v) => {
+      velocity.current = v;
+    });
+    api.position.subscribe((p) => {
+      position.current = p;
+    });
   }, [api]);
 
-  const currentVelocity = new THREE.Vector3();
+  const currentVelocity = useRef(new THREE.Vector3());
+  const front = useRef(new THREE.Vector3());
+  const rightV = useRef(new THREE.Vector3());
+  const moveDir = useRef(new THREE.Vector3());
 
   useFrame((_, dt) => {
     const [x, y, z] = position.current;
-    const fwd = forward || mobileMove.y > 0.25;
-    const back = backward || mobileMove.y < -0.25;
-    const lft = left || mobileMove.x < -0.25;
-    const rgt = right || mobileMove.x > 0.25;
+
+    if (isTouch) {
+      if (!cameraInitialized.current) {
+        yaw.current = camera.rotation.y;
+        pitch.current = camera.rotation.x;
+        cameraInitialized.current = true;
+      }
+      const look = consumeLookDelta();
+      yaw.current -= look.x;
+      pitch.current = THREE.MathUtils.clamp(pitch.current - look.y, -PITCH_LIMIT, PITCH_LIMIT);
+      camera.rotation.order = "YXZ";
+      camera.rotation.y = yaw.current;
+      camera.rotation.x = pitch.current;
+    }
+
+    camera.position.set(x, y + 1.8, z);
+
+    moveDir.current.set(0, 0, 0);
+
+    front.current.set(0, 0, -1).applyQuaternion(camera.quaternion);
+    front.current.y = 0;
+    front.current.normalize();
+
+    rightV.current.set(1, 0, 0).applyQuaternion(camera.quaternion);
+    rightV.current.y = 0;
+    rightV.current.normalize();
+
+    if (isTouch && (Math.abs(mobileMove.x) > 0.05 || Math.abs(mobileMove.y) > 0.05)) {
+      moveDir.current
+        .addScaledVector(front.current, mobileMove.y)
+        .addScaledVector(rightV.current, mobileMove.x);
+    } else {
+      if (forward) moveDir.current.add(front.current);
+      if (backward) moveDir.current.sub(front.current);
+      if (right) moveDir.current.add(rightV.current);
+      if (left) moveDir.current.sub(rightV.current);
+    }
+
+    if (moveDir.current.lengthSq() > 0) moveDir.current.normalize();
+
+    currentVelocity.current.set(velocity.current[0], velocity.current[1], velocity.current[2]);
+
+    const isUnderwater = y < -0.5;
+    const speed = isUnderwater ? MOVE_SPEED * 0.5 : MOVE_SPEED;
+    const target = moveDir.current.multiplyScalar(speed);
+
+    const vx = THREE.MathUtils.damp(currentVelocity.current.x, target.x, ACCEL, dt);
+    const vz = THREE.MathUtils.damp(currentVelocity.current.z, target.z, ACCEL, dt);
+
+    let vy = velocity.current[1];
+    const isGrounded = Math.abs(vy) < 0.1;
     const wantJump = jump || mobileJump;
 
-    // Camera follows player
-    camera.position.set(x, y + 1.8, z); // Adjust camera height
-
-    // Calculate movement direction
-    const front = new THREE.Vector3(0, 0, 0);
-    const rightV = new THREE.Vector3(0, 0, 0);
-    const moveDir = new THREE.Vector3(0, 0, 0);
-
-    // Get camera forward direction projected on XZ plane
-    front.set(0, 0, -1).applyQuaternion(camera.quaternion);
-    front.y = 0;
-    front.normalize();
-
-    // Get camera right direction projected on XZ plane
-    rightV.set(1, 0, 0).applyQuaternion(camera.quaternion);
-    rightV.y = 0;
-    rightV.normalize();
-
-    // Combine inputs
-    if (fwd) moveDir.add(front);
-    if (back) moveDir.sub(front);
-    if (rgt) moveDir.add(rightV);
-    if (lft) moveDir.sub(rightV);
-    
-    moveDir.normalize();
-
-    // Apply movement
-    currentVelocity.set(velocity.current[0], velocity.current[1], velocity.current[2]);
-    
-    // Underwater logic
-    const isUnderwater = y < -0.5; // Slightly below surface
-    const speed = isUnderwater ? MOVE_SPEED * 0.5 : MOVE_SPEED;
-    
-    const target = moveDir.multiplyScalar(speed);
-    
-    // Apply damping for smooth movement
-    const vx = THREE.MathUtils.damp(currentVelocity.x, target.x, ACCEL, dt);
-    const vz = THREE.MathUtils.damp(currentVelocity.z, target.z, ACCEL, dt);
-    
-    // Jump logic (Real physics)
-    let vy = velocity.current[1];
-    
-    // Simple ground check based on velocity
-    // This is a heuristic; for production you'd use a raycast
-    const isGrounded = Math.abs(vy) < 0.1;
-    
-    if (wantJump && !prevJumpDown.current) {
-      if (isGrounded || isUnderwater) {
-        vy = JUMP_FORCE; // Apply instant upward velocity
-      }
+    if (wantJump && !prevJumpDown.current && (isGrounded || isUnderwater)) {
+      vy = JUMP_FORCE;
     }
     prevJumpDown.current = !!wantJump;
-    
-    // Apply velocity
-    // We must pass current Y velocity to let gravity work
+
     api.velocity.set(vx, vy, vz);
   });
 
   return (
-    <group ref={ref as any}>
-      {/* Player body - capsule-like shape */}
-      <mesh position={[0, 0, 0]} castShadow>
+    <group ref={ref as React.RefObject<THREE.Group>}>
+      <mesh castShadow={quality.shadows}>
         <capsuleGeometry args={[0.4, 1.2]} />
         <meshStandardMaterial color="#4a90e2" />
       </mesh>
-      {/* Player head */}
-      <mesh position={[0, 0.8, 0]} castShadow>
-        <sphereGeometry args={[0.3, 12, 8]} />
+      <mesh position={[0, 0.8, 0]} castShadow={quality.shadows}>
+        <sphereGeometry args={[0.3, ...headSegments]} />
         <meshStandardMaterial color="#ffdbac" />
       </mesh>
-      {/* Simple eyes */}
-      <mesh position={[-0.1, 0.9, 0.25]} castShadow>
-        <sphereGeometry args={[0.05, 8, 8]} />
-        <meshStandardMaterial color="#000" />
-      </mesh>
-      <mesh position={[0.1, 0.9, 0.25]} castShadow>
-        <sphereGeometry args={[0.05, 8, 8]} />
-        <meshStandardMaterial color="#000" />
-      </mesh>
+      {!quality.isMobile && (
+        <>
+          <mesh position={[-0.1, 0.9, 0.25]} castShadow>
+            <sphereGeometry args={[0.05, 8, 8]} />
+            <meshStandardMaterial color="#000" />
+          </mesh>
+          <mesh position={[0.1, 0.9, 0.25]} castShadow>
+            <sphereGeometry args={[0.05, 8, 8]} />
+            <meshStandardMaterial color="#000" />
+          </mesh>
+        </>
+      )}
     </group>
   );
 }

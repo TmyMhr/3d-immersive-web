@@ -7,7 +7,7 @@ type Props = {
   azimuth: number;
 };
 
-export default function DynamicSky({ sunPosition, azimuth }: Props): JSX.Element {
+export default function DynamicSky({ sunPosition, azimuth }: Props): React.ReactElement {
   return <Sky distance={450000} sunPosition={sunPosition} azimuth={azimuth} />;
 }
 
